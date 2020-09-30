@@ -4,11 +4,14 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
 
 import com.avaliacao.model.Usuario;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import com.avaliacao.util.HibernateUtil;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,12 +32,16 @@ public class UsuarioDAO {
         HttpSession httpSession = (HttpSession)FacesContext.getCurrentInstance().getExternalContext().getSession(true);
         Session session = HibernateUtil.getSessionFactory().openSession();
 
+        Criteria crit = session.createCriteria(Usuario.class);
         try {
-            Query query = session.createQuery("SELECT u from Usuario u where u.email = :email and u.senha = :senha")
-            .setParameter("email", email)
-            .setParameter("senha", senha);
-            if(query.list().size()>0){
-                usuario = (Usuario)query.list().get(0);
+            crit.add(Restrictions.eq("email", email));
+            crit.add(Restrictions.eq("senha", senha));
+//            Query query = session.createQuery("SELECT u from Usuario u where u.email = :email and u.senha = :senha")
+//            .setParameter("email", email)
+//            .setParameter("senha", senha);
+            List results = crit.list();
+            if(results.size()>0){
+                usuario = (Usuario)results.get(0);
                 httpSession.setAttribute("usuarioId", usuario.getId());
             }
         } finally {
@@ -69,9 +76,13 @@ public class UsuarioDAO {
         List<Usuario> lista = new ArrayList<Usuario>();
 
         Session session = HibernateUtil.getSessionFactory().openSession();
+
+        Criteria crit = session.createCriteria(Usuario.class);
         try {
             session.beginTransaction();
-            lista = (List<Usuario>) session.createCriteria(Usuario.class).list();
+//            lista = (List<Usuario>) session.createCriteria(Usuario.class).list();
+            crit.addOrder(Order.desc("nome"));
+            lista = crit.list();
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();

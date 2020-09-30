@@ -7,11 +7,14 @@ import javax.persistence.Persistence;
 
 import com.avaliacao.model.Pelada;
 import com.avaliacao.model.Usuario;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import com.avaliacao.util.HibernateUtil;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +33,16 @@ public class PeladaDAO {
         Pelada pelada = null;
 
         Session session = HibernateUtil.getSessionFactory().openSession();
+        Criteria crit = session.createCriteria(Pelada.class);
         try {
-            Query query = session.createQuery("SELECT u from Pelada u where u.nomeEvento = :nomeEventoEsportivo")
-                    .setParameter("nome_evento", nomeEventoEsportivo);
-            pelada = (Pelada)query.list().get(0);
+            crit.add(Restrictions.eq("nome_evento", nomeEventoEsportivo));
+//            Query query = session.createQuery("SELECT u from Pelada u where u.nomeEvento = :nomeEventoEsportivo")
+//                        .setParameter("nome_evento", nomeEventoEsportivo);
+            List results = crit.list();
+            if(results.size()>0){
+                pelada = (Pelada)results.get(0);
+            }
+            //pelada = (Pelada)query.list().get(0);
         } finally {
             session.flush();
             session.close();
@@ -41,6 +50,7 @@ public class PeladaDAO {
 
         return pelada;
     }
+
 
     public void inserirPelada(Pelada pelada) throws Exception{
         Transaction trns = null;
@@ -66,9 +76,12 @@ public class PeladaDAO {
         List<Pelada> lista = new ArrayList<Pelada>();
 
         Session session = HibernateUtil.getSessionFactory().openSession();
+
+        Criteria crit = session.createCriteria(Pelada.class);
         try {
             session.beginTransaction();
-            lista = (List<Pelada>) session.createCriteria(Pelada.class).list();
+            crit.addOrder(Order.desc("nome_evento"));
+            lista = crit.list();
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();

@@ -1,11 +1,13 @@
 package com.avaliacao.db;
 
 import com.avaliacao.model.Convite;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import com.avaliacao.util.HibernateUtil;
+import org.hibernate.criterion.Restrictions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +27,11 @@ public class ConviteDAO {
         Convite convite = null;
 
         Session session = HibernateUtil.getSessionFactory().openSession();
+
+        Criteria crit = session.createCriteria(Convite.class);
         try {
+            crit.add(Restrictions.eq("usuario_id", usuarioId));
+            crit.add(Restrictions.eq("pelada_id", peladaId));
             Query query = session.createQuery("SELECT i from Convite i where i.usuarioId = :usuarioId and i.peladaId = :peladaId")
                     .setParameter("usuarioId", usuarioId)
                     .setParameter("peladaId", peladaId);
